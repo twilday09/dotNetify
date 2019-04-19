@@ -1,5 +1,5 @@
 ﻿/*
-Copyright 2018 Dicky Suryadi
+Copyright 2019 Dicky Suryadi
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -22,59 +22,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
 
-namespace DotNetify.Client
+namespace DotNetify.Client.Blazor
 {
-   /// <summary>
-   /// Define methods to access property values of a view object.
-   /// </summary>
-   public interface IViewState
-   {
-      /// <summary>
-      /// Returns whether the view has the specified property.
-      /// </summary>
-      /// <param name="name">Property name.</param>
-      /// <returns>True if the view has the property.</returns>
-      bool HasProperty(string name);
-
-      /// <summary>
-      /// Returns the value of a property.
-      /// </summary>
-      /// <typeparam name="T">Property type.</typeparam>
-      /// <param name="name">Property name.</param>
-      /// <returns>Property value.</returns>
-      T Get<T>(string name);
-
-      /// <summary>
-      /// Sets the view's properties given a dictionary of property names and values, and raises PropertyChanged events.
-      /// </summary>
-      /// <param name="states">Dictionary of property names and values.</param>
-      void Set(Dictionary<string, object> states);
-
-      /// <summary>
-      /// Adds a new item to a list.
-      /// </summary>
-      /// <param name="listName">Property name of the list.</param>
-      /// <param name="data">Item to add to the list.</param>
-      /// <param name="itemKeyName">Item property name that identify items in the list.</param>
-      void AddList(string listName, object data, string itemKeyName);
-
-      /// <summary>
-      /// Updates an item on a list.
-      /// </summary>
-      /// <param name="listName">Property name of the list.</param>
-      /// <param name="data">Item to update on the list.</param>
-      /// <param name="itemKeyName">Item property name that identify items in the list.</param>
-      void UpdateList(string listName, object data, string itemKeyName);
-
-      /// <summary>
-      /// Removes an item from a list.
-      /// </summary>
-      /// <param name="listName">Property name of the list.</param>
-      /// <param name="key">Identifies the item to remove.</param>
-      /// <param name="itemKeyName">Item property name that identify items in the list.</param>
-      void RemoveList(string listName, object key, string itemKeyName);
-   }
-
    /// <summary>
    /// Provides methods that access property values of a view object and raise PropertyChanged events when changed.
    /// </summary>
@@ -89,19 +38,10 @@ namespace DotNetify.Client
       /// Constructor.
       /// </summary>
       /// <param name="view">View object.</param>
-      public ViewState(object view)
+      /// <param name="dispatcher">UI thread dispatcher.</param>
+      public ViewState(object view, IUIThreadDispatcher dispatcher)
       {
          _view = view;
-         _dispatcher = new DefaultUIThreadDispatcher();
-      }
-
-      /// <summary>
-      /// Constructor.
-      /// </summary>
-      /// <param name="view">View object.</param>
-      /// <param name="dispatcher">UI thread dispatcher.</param>
-      public ViewState(INotifyPropertyChanged view, IUIThreadDispatcher dispatcher) : this(view)
-      {
          _dispatcher = dispatcher;
       }
 
@@ -111,7 +51,7 @@ namespace DotNetify.Client
       /// <typeparam name="T">Property type.</typeparam>
       /// <param name="name">Property name.</param>
       /// <returns>Property value.</returns>
-      public virtual T Get<T>(string name)
+      public T Get<T>(string name)
       {
          var propInfo = PropertyInfoHelper.Find(_view, name);
          return (T)propInfo?.GetValue(_view);
@@ -297,9 +237,6 @@ namespace DotNetify.Client
       /// <param name="propertyName">Property name.</param>
       private void RaisePropertyChanged(string propertyName)
       {
-         if (_view is INotifyPropertyChanged == false)
-            return;
-
          if (_propChangedEvent == null)
          {
             Type viewType = _view.GetType();
